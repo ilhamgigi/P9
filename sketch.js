@@ -1,206 +1,241 @@
-var PLAY = 1;
-var END = 0;
+var path,mainCyclist;
+var player1,player2,player3;
+var pathImg,mainRacerImg1,mainRacerImg2;
+
+var oppPink1Img,oppPink2Img;
+var oppYellow1Img,oppYellow2Img;
+var oppRed1Img,oppRed2Img;
+var gameOverImg,cycleBell;
+
+var pinkCG, yellowCG,redCG; 
+
+var END =0;
+var PLAY =1;
 var gameState = PLAY;
 
-var trex, trex_running, trex_collided;
-var ground, invisibleGround, groundImage;
-
-var cloudsGroup, cloudImage;
-var obstaclesGroup, obstacle1, obstacle2, obstacle3, obstacle4;
-var backgroundImg
-var score=0;
-var jumpSound, collidedSound;
-
+var distance=0;
 var gameOver, restart;
 
-
 function preload(){
-  jumpSound = loadSound("jump.wav")
-  collidedSound = loadSound("collided.wav")
+  pathImg = loadImage("Road.png");
+  mainRacerImg1 = loadAnimation("mainPlayer1.png","mainPlayer2.png");
+  mainRacerImg2= loadAnimation("mainPlayer3.png");
   
-  backgroundImg = loadImage("backgroundImg.png")
-  sunAnimation = loadImage("sun.png");
+  oppPink1Img = loadAnimation("opponent1.png","opponent2.png");
+  oppPink2Img = loadAnimation("opponent3.png");
   
-  trex_running = loadAnimation("trex_2.png","trex_1.png","trex_3.png");
-  trex_collided = loadAnimation("trex_collided.png");
+  oppYellow1Img = loadAnimation("opponent4.png","opponent5.png");
+  oppYellow2Img = loadAnimation("opponent6.png");
   
-  groundImage = loadImage("ground.png");
+  oppRed1Img = loadAnimation("opponent7.png","opponent8.png");
+  oppRed2Img = loadAnimation("opponent9.png");
   
-  cloudImage = loadImage("cloud.png");
-  
-  obstacle1 = loadImage("obstacle1.png");
-  obstacle2 = loadImage("obstacle2.png");
-  obstacle3 = loadImage("obstacle3.png");
-  obstacle4 = loadImage("obstacle4.png");
-  
+  cycleBell = loadSound("bell.mp3");
   gameOverImg = loadImage("gameOver.png");
-  restartImg = loadImage("restart.png");
 }
 
-function setup() {
-  createCanvas(windowWidth, windowHeight);
+function setup(){
   
-  sun = createSprite(width-50,100,10,10);
-  sun.addAnimation("sun", sunAnimation);
-  sun.scale = 0.1
-  
-  trex = createSprite(50,height-70,20,50);
-  
-  
-  trex.addAnimation("running", trex_running);
-  trex.addAnimation("collided", trex_collided);
-  trex.setCollider('circle',0,0,350)
-  trex.scale = 0.08;
-  
-  invisibleGround = createSprite(width/2,height-10,width,125);  
-  invisibleGround.shapeColor = "#f4cbaa";
-  
-  ground = createSprite(width/2,height,width,2);
-  ground.addImage("ground",groundImage);
-  ground.x = width/2
-  ground.velocityX = -(6 + 3*score/100);
-  
-  gameOver = createSprite(width/2,height/2- 50);
-  gameOver.addImage(gameOverImg);
-  
-  restart = createSprite(width/2,height/2);
-  restart.addImage(restartImg);
-  
-  gameOver.scale = 0.5;
-  restart.scale = 0.1;
+createCanvas(1200,300);
+// Moving background
+path=createSprite(100,150);
+path.addImage(pathImg);
+path.velocityX = -5;
 
-  gameOver.visible = false;
-  restart.visible = false;
+//creating boy running
+mainCyclist  = createSprite(70,150);
+mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
+mainCyclist.scale=0.07;
   
- 
-  // invisibleGround.visible =false
+//set collider for mainCyclist
 
-  cloudsGroup = new Group();
-  obstaclesGroup = new Group();
+//mainCyclist.setCollission("rectangle",0,0,40,40);
+mainCyclist.setCollider("rectangle",0,0,40,40);
+//mainCyclist.setCollission("rectangle",0,0,40,40,50);
+//mainCyclist.setCollider("rectangle",0,0,40,40,50);
+
   
-  score = 0;
+gameOver = createSprite(650,150);
+gameOver.addImage(gameOverImg);
+gameOver.scale = 0.8;
+gameOver.visible = false;  
+  
+pinkCG = new Group();
+yellowCG = new Group();
+redCG = new Group();
+  
 }
 
 function draw() {
-  //trex.debug = true;
-  background(backgroundImg);
-  textSize(20);
-  fill("black")
-  text("Score: "+ score,30,50);
-  
-  
-  if (gameState===PLAY){
-    score = score + Math.round(getFrameRate()/60);
-    ground.velocityX = -(6 + 3*score/100);
-    
-    if((touches.length > 0 || keyDown("SPACE")) && trex.y  >= height-120) {
-      jumpSound.play( )
-      trex.velocityY = -10;
-       touches = [];
-    }
-    
-    trex.velocityY = trex.velocityY + 0.8
-  
-    if (ground.x < 0){
-      ground.x = ground.width/2;
-    }
-  
-    trex.collide(invisibleGround);
-    spawnClouds();
-    spawnObstacles();
-  
-    if(obstaclesGroup.isTouching(trex)){
-        collidedSound.play()
-        gameState = END;
-    }
-  }
-  else if (gameState === END) {
-    gameOver.visible = true;
-    restart.visible = true;
-    
-    //set velcity of each game object to 0
-    ground.velocityX = 0;
-    trex.velocityY = 0;
-    obstaclesGroup.setVelocityXEach(0);
-    cloudsGroup.setVelocityXEach(0);
-    
-    //change the trex animation
-    trex.changeAnimation("collided",trex_collided);
-    
-    //set lifetime of the game objects so that they are never destroyed
-    obstaclesGroup.setLifetimeEach(-1);
-    cloudsGroup.setLifetimeEach(-1);
-    
-    if(touches.length>0 || keyDown("SPACE") || mousePressedOver(restart)) {      
-      reset();
-      touches = []
-    }
-  }
-  
+  background(0);
   
   drawSprites();
-}
-
-function spawnClouds() {
-  //write code here to spawn the clouds
-  if (frameCount % 60 === 0) {
-    var cloud = createSprite(width+20,height-300,40,10);
-    cloud.y = Math.round(random(100,220));
-    cloud.addImage(cloudImage);
-    cloud.scale = 0.5;
-    cloud.velocityX = -3;
+  textSize(20);
+  fill(255);
+  text("Distance: "+ distance,900,30);
+  
+  if(gameState===PLAY){
     
-     //assign lifetime to the variable
-    cloud.lifetime = 300;
-    
-    //adjust the depth
-    cloud.depth = trex.depth;
-    trex.depth = trex.depth+1;
-    
-    //add each cloud to the group
-    cloudsGroup.add(cloud);
+   distance = distance + Math.round(getFrameRate()/50);
+   path.velocityX = -(6 + 2*distance/150);
+  
+   mainCyclist.y = World.mouseY;
+  
+   edges= createEdgeSprites();
+   mainCyclist .collide(edges);
+  
+  //code to reset the background
+  if(path.x < 0 ){
+    path.x = width/2;
   }
   
-}
-
-function spawnObstacles() {
-  if(frameCount % 60 === 0) {
-    var obstacle = createSprite(600,height-95,20,30);
-    obstacle.setCollider('circle',0,0,45)
-    // obstacle.debug = true
+    //code to play cycle bell sound
+  if(keyDown("space")) {
+    cycleBell.play();
+  }
   
-    obstacle.velocityX = -(6 + 3*score/100);
-    
-    //generate random obstacles
-    var rand = Math.round(random(1,2));
-    switch(rand) {
-      case 1: obstacle.addImage(obstacle1);
-              break;
-      case 2: obstacle.addImage(obstacle2);
-              break;
-      default: break;
+  //creating continous opponent players
+  var select_oppPlayer = Math.round(random(1,3));
+  
+  if (World.frameCount % 150 == 0) {
+    if (select_oppPlayer == 1) {
+      pinkCyclists();
+    } else if (select_oppPlayer == 2) {
+      yellowCyclists();
+    } else {
+      redCyclists();
+    }
+  }
+  
+   if(pinkCG.isTouching(mainCyclist)){
+     gameState = END;
+     player1.velocityY = 0;
+     player1.addAnimation("opponentPlayer1",oppPink2Img);
     }
     
-    //assign scale and lifetime to the obstacle           
-    obstacle.scale = 0.3;
-    obstacle.lifetime = 300;
-    obstacle.depth = trex.depth;
-    trex.depth +=1;
-    //add each obstacle to the group
-    obstaclesGroup.add(obstacle);
-  }
+    if(yellowCG.isTouching(mainCyclist)){
+      gameState = END;
+      player2.velocityY = 0;
+      player2.addAnimation("opponentPlayer2",oppYellow2Img);
+    }
+    
+    if(redCG.isTouching(mainCyclist)){
+      gameState = END;
+      player3.velocityY = 0;
+      player3.addAnimation("opponentPlayer3",oppRed2Img);
+    }
+    
+}else if (gameState === END) {
+    gameOver.visible = true;
+  
+    textSize(20);
+    fill(255);
+    text("Press Up Arrow to Restart the game!", 500,200);
+  
+    path.velocityX = 0;
+    mainCyclist.velocityY = 0;
+    mainCyclist.addAnimation("SahilRunning",mainRacerImg2);
+  
+    pinkCG.setVelocityXEach(0);
+    pinkCG.setLifetimeEach(-1);
+  
+    yellowCG.setVelocityXEach(0);
+    yellowCG.setLifetimeEach(-1);
+  
+    redCG.setVelocityXEach(0);
+    redCG.setLifetimeEach(-1);
+    
+    // if(keyDown("UP_ARROW")) {
+    //   reset;
+    // }
+
+    // if(key("UP_ARROW")) {
+    //   reset();
+    // }
+
+    // if(keyDown()) {
+    //   reset();
+    // }
+
+     if(keyDown("UP_ARROW")) {
+       reset();
+     }
 }
+}
+
+function pinkCyclists(){
+        player1 =createSprite(1100,Math.round(random(50, 250)));
+        player1.scale =0.06;
+        player1.velocityX = -(6 + 2*distance/150);
+        player1.addAnimation("opponentPlayer1",oppPink1Img);
+        player1.setLifetime=170;
+        pinkCG.add(player1);
+}
+
+function yellowCyclists(){
+        player2 =createSprite(1100,Math.round(random(50, 250)));
+        player2.scale =0.06;
+        player2.velocityX = -(6 + 2*distance/150);
+        player2.addAnimation("opponentPlayer2",oppYellow1Img);
+        player2.setLifetime=170;
+        yellowCG.add(player2);
+}
+
+function redCyclists(){
+        player3 =createSprite(1100,Math.round(random(50, 250)));
+        player3.scale =0.06;
+        player3.velocityX = -(6 + 2*distance/150);
+        player3.addAnimation("opponentPlayer3",oppRed1Img);
+        player3.setLifetime=170;
+        redCG.add(player3);
+}
+
+//function reset{
+//  gameState = END;
+//  gameOver.visible = false;
+//  mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
+  
+//  pinkCG.destroyEach();
+//  yellowCG.destroyEach();
+//  redCG.destroyEach();
+  
+//  distance = 0;
+// }
+
+//function reset{
+//  gameState = PLAY;
+//  gameOver.visible = true;
+//  mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
+  
+//  pinkCG.destroy();
+//  yellowCG.destroy();
+//  redCG.destroy();
+  
+//  distance = 0;
+// }
 
 function reset(){
   gameState = PLAY;
   gameOver.visible = false;
-  restart.visible = false;
+  mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
   
-  obstaclesGroup.destroyEach();
-  cloudsGroup.destroyEach();
+  pinkCG.destroyEach();
+  yellowCG.destroyEach();
+    redCG.destroyEach();
   
-  trex.changeAnimation("running",trex_running);
+  distance = 0;
+ }
+
+//function reset(){
+//  gameState = END;
+//  gameOver.visible = true;
+//  mainCyclist.addAnimation("SahilRunning",mainRacerImg1);
   
-  score = 0;
+//  pinkCG.destroyEach();
+//  yellowCG.destroyEach();
+//  redCG.destroyEach();
   
-}
+//  distance = 50;
+// }
+
+
